@@ -1,98 +1,307 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# 📈 Cryptocurrency Dashboard - Real-Time Exchange Rates
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+A real-time cryptocurrency dashboard that displays live exchange rates for ETH/USDC, ETH/USDT, and ETH/BTC with interactive charts and WebSocket-based data updates.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## 🏗️ Architecture
 
-## Description
+This project is divided into two main components:
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+- **Backend**: NestJS + TypeScript + WebSockets
+- **Frontend**: React + TypeScript + Vite
 
-## Project setup
+## 🚀 Tech Stack
 
-```bash
-$ npm install
-```
+### Backend
+- **NestJS** - Progressive Node.js framework
+- **TypeScript** - Type-safe development
+- **Socket.IO** - Real-time bidirectional communication
+- **Finnhub WebSocket API** - Live cryptocurrency data
+- **Class Validator** - Data validation
 
-## Compile and run the project
+### Frontend
+- **React 18** - UI library
+- **TypeScript** - Type safety
+- **Vite** - Fast build tool
+- **Socket.IO Client** - Real-time updates
+- **Recharts** - Beautiful charts and data visualization
 
-```bash
-# development
-$ npm run start
+## 📋 Prerequisites
 
-# watch mode
-$ npm run start:dev
+Before you begin, ensure you have the following installed:
 
-# production mode
-$ npm run start:prod
-```
+- **Node.js** (v18 or higher)
+- **npm** or **yarn**
+- **Finnhub API Key** (free tier available)
 
-## Run tests
+## 🔑 Getting Your Finnhub API Key
 
-```bash
-# unit tests
-$ npm run test
+1. Visit [Finnhub.io](https://finnhub.io/)
+2. Click on "Get free API key" or "Sign Up"
+3. Complete the registration
+4. Copy your API key from the dashboard
+5. The free tier supports up to 60 requests/minute
 
-# e2e tests
-$ npm run test:e2e
+## ⚙️ Installation & Setup
 
-# test coverage
-$ npm run test:cov
-```
-
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+### 1. Clone the Repository
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+git clone <repository-url>
+cd cryptocurrency-dashboard
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+### 2. Backend Setup
 
-## Resources
+```bash
+# Navigate to backend directory
+cd backend
 
-Check out a few resources that may come in handy when working with NestJS:
+# Install dependencies
+npm install
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+# Configure environment variables
+cp .env.example .env
+```
 
-## Support
+Edit `backend/.env` and add your Finnhub API key:
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+```env
+PORT=3001
+FINNHUB_API_KEY=your_actual_finnhub_api_key_here
+FINNHUB_WS_URL=wss://ws.finnhub.io
+FRONTEND_URL=http://localhost:5173
+WS_PORT=3001
+```
 
-## Stay in touch
+### 3. Frontend Setup
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+```bash
+# Navigate to frontend directory (from root)
+cd frontend
 
-## License
+# Install dependencies
+npm install
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+# Configure environment variables
+cp .env.example .env
+```
+
+The default frontend `.env` should work out of the box:
+
+```env
+VITE_API_URL=http://localhost:3001
+VITE_WS_URL=http://localhost:3001
+```
+
+## 🎯 Running the Application
+
+### Development Mode
+
+You'll need **two terminal windows** to run both backend and frontend simultaneously.
+
+#### Terminal 1 - Backend
+
+```bash
+cd backend
+npm run start:dev
+```
+
+The backend will start on `http://localhost:3001`
+
+#### Terminal 2 - Frontend
+
+```bash
+cd frontend
+npm run dev
+```
+
+The frontend will start on `http://localhost:5173`
+
+### Production Mode
+
+#### Backend
+
+```bash
+cd backend
+npm run build
+npm run start:prod
+```
+
+#### Frontend
+
+```bash
+cd frontend
+npm run build
+npm run preview
+```
+
+## 🧪 Running Tests
+
+### Backend Tests
+
+```bash
+cd backend
+
+# Unit tests
+npm run test
+
+# E2E tests
+npm run test:e2e
+
+# Test coverage
+npm run test:cov
+```
+
+### Frontend Tests
+
+```bash
+cd frontend
+
+# Run tests
+npm run test
+```
+
+## 📁 Project Structure
+
+```
+cryptocurrency-dashboard/
+├── backend/                    # NestJS Backend
+│   ├── src/
+│   │   ├── crypto/            # Crypto module (to be created)
+│   │   ├── websocket/         # WebSocket gateway (to be created)
+│   │   ├── data/              # Data persistence (to be created)
+│   │   ├── app.module.ts      # Main app module
+│   │   └── main.ts            # Application entry point
+│   ├── test/                  # Test files
+│   ├── .env                   # Environment variables
+│   └── package.json
+│
+├── frontend/                   # React Frontend
+│   ├── src/
+│   │   ├── components/        # React components (to be created)
+│   │   ├── hooks/             # Custom React hooks (to be created)
+│   │   ├── services/          # API services (to be created)
+│   │   ├── types/             # TypeScript types (to be created)
+│   │   ├── App.tsx            # Main App component
+│   │   └── main.tsx           # Application entry point
+│   ├── .env                   # Environment variables
+│   └── package.json
+│
+└── README.md                   # This file
+```
+
+## 🔧 Available Scripts
+
+### Backend
+
+| Command | Description |
+|---------|-------------|
+| `npm run start` | Start in production mode |
+| `npm run start:dev` | Start in development mode with hot reload |
+| `npm run start:debug` | Start in debug mode |
+| `npm run build` | Build for production |
+| `npm run test` | Run unit tests |
+| `npm run test:e2e` | Run end-to-end tests |
+| `npm run test:cov` | Run tests with coverage |
+| `npm run lint` | Lint and fix files |
+
+### Frontend
+
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start development server |
+| `npm run build` | Build for production |
+| `npm run preview` | Preview production build |
+| `npm run lint` | Lint files |
+
+## 🎨 Features
+
+### Current Features (Phase 1 - Setup Complete)
+- ✅ Project structure with separate backend and frontend
+- ✅ Development environment configured
+- ✅ Dependencies installed
+- ✅ Environment variables setup
+
+### Upcoming Features (Phase 2-5)
+
+#### Backend
+- 🔄 WebSocket connection to Finnhub
+- 🔄 Real-time data streaming for ETH/USDC, ETH/USDT, ETH/BTC
+- 🔄 Hourly average calculation
+- 🔄 Data persistence
+- 🔄 Connection retry logic
+- 🔄 Error handling and logging
+
+#### Frontend
+- 🔄 Real-time dashboard
+- 🔄 Live charts for all currency pairs
+- 🔄 Current price display
+- 🔄 Hourly average display
+- 🔄 Connection status indicator
+- 🔄 Error handling UI
+- 🔄 Responsive design
+
+## 🐛 Troubleshooting
+
+### Backend Issues
+
+**Port already in use**
+```bash
+# Find and kill the process using port 3001
+lsof -ti:3001 | xargs kill -9
+```
+
+**Finnhub connection fails**
+- Verify your API key is correct in `.env`
+- Check you haven't exceeded the rate limit (60 req/min)
+- Ensure you have internet connectivity
+
+### Frontend Issues
+
+**CORS errors**
+- Ensure backend is running
+- Verify `FRONTEND_URL` in backend `.env` matches your frontend URL
+
+**Can't connect to WebSocket**
+- Check backend is running on port 3001
+- Verify `VITE_WS_URL` in frontend `.env` is correct
+
+## 📝 Environment Variables Reference
+
+### Backend (.env)
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `PORT` | Backend server port | `3001` |
+| `FINNHUB_API_KEY` | Your Finnhub API key | Required |
+| `FINNHUB_WS_URL` | Finnhub WebSocket URL | `wss://ws.finnhub.io` |
+| `FRONTEND_URL` | Frontend URL for CORS | `http://localhost:5173` |
+| `WS_PORT` | WebSocket server port | `3001` |
+
+### Frontend (.env)
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `VITE_API_URL` | Backend API URL | `http://localhost:3001` |
+| `VITE_WS_URL` | Backend WebSocket URL | `http://localhost:3001` |
+
+## 🤝 Contributing
+
+This is a take-home assessment project. However, suggestions and feedback are welcome!
+
+## 📄 License
+
+This project is private and for assessment purposes only.
+
+## 🆘 Support
+
+If you encounter any issues during setup:
+
+1. Ensure all prerequisites are installed
+2. Check that environment variables are correctly configured
+3. Verify your Finnhub API key is valid
+4. Make sure both backend and frontend are running
+
+---
+
+**Next Steps**: Proceed to Phase 2 - Backend Implementation (WebSocket integration with Finnhub)
