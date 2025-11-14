@@ -263,8 +263,29 @@ export class DataService {
   }
 
   /**
+   * Get the latest hourly average for a cryptocurrency pair
+   *
+   * @param symbol - Trading pair symbol
+   * @returns Latest hourly average or null if none exists
+   */
+  async getLatestHourlyAverage(symbol: string) {
+    const pair = await this.getPairBySymbol(symbol);
+
+    if (!pair) {
+      throw new NotFoundException(`Cryptocurrency pair ${symbol} not found`);
+    }
+
+    return await this.prisma.hourlyAverage.findFirst({
+      where: {
+        pairId: pair.id,
+      },
+      orderBy: { hour: 'desc' },
+    });
+  }
+
+  /**
    * Get complete cryptocurrency data
-   * Includes current price and hourly averages
+   * Includes current price, hourly averages, and latest hourly average
    *
    * @param symbol - Trading pair symbol
    * @param hoursHistory - Number of hours of history to include (default: 24)
@@ -280,15 +301,18 @@ export class DataService {
       throw new NotFoundException(`Cryptocurrency pair ${symbol} not found`);
     }
 
-    const [currentPrice, hourlyAverages] = await Promise.all([
-      this.getCurrentPrice(symbol),
-      this.getHourlyAverages(symbol, hoursHistory),
-    ]);
+    const [currentPrice, hourlyAverages, latestHourlyAverage] =
+      await Promise.all([
+        this.getCurrentPrice(symbol),
+        this.getHourlyAverages(symbol, hoursHistory),
+        this.getLatestHourlyAverage(symbol),
+      ]);
 
     return {
       pair,
       currentPrice: currentPrice ?? undefined,
       hourlyAverages,
+      latestHourlyAverage,
     };
   }
 

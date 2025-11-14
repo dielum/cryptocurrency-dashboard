@@ -33,6 +33,7 @@ export interface CryptoData {
   pair: CryptoPair;
   currentPrice?: Price;
   hourlyAverages: HourlyAverage[];
+  latestHourlyAverage?: HourlyAverage | null;
 }
 
 export interface AllCryptoData {

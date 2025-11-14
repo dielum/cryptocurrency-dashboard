@@ -1,8 +1,10 @@
 import { Module, OnModuleInit } from '@nestjs/common';
+import { ScheduleModule } from '@nestjs/schedule';
 import { DataService } from './data.service';
 import { FinnhubService } from './finnhub.service';
 import { CryptoController } from './crypto.controller';
 import { CryptoGateway } from './crypto.gateway';
+import { SchedulerService } from './scheduler.service';
 
 /**
  * CryptoModule
@@ -33,8 +35,9 @@ import { CryptoGateway } from './crypto.gateway';
  * connect to Finnhub WebSocket and start receiving real-time price updates.
  */
 @Module({
+  imports: [ScheduleModule.forRoot()], // Enable scheduled tasks
   controllers: [CryptoController],
-  providers: [DataService, FinnhubService, CryptoGateway],
+  providers: [DataService, FinnhubService, CryptoGateway, SchedulerService],
   exports: [DataService, FinnhubService, CryptoGateway],
 })
 export class CryptoModule implements OnModuleInit {

@@ -14,7 +14,6 @@ interface PriceCardProps {
 
 export const PriceCard = ({ data, latestUpdate }: PriceCardProps) => {
   const [currentPrice, setCurrentPrice] = useState(data.currentPrice?.price || 0);
-  const [currentVolume, setCurrentVolume] = useState(data.currentPrice?.volume || null);
   const [lastUpdate, setLastUpdate] = useState(data.currentPrice?.timestamp || new Date().toISOString());
   const [priceChange, setPriceChange] = useState<'up' | 'down' | 'neutral'>('neutral');
   const [isFlashing, setIsFlashing] = useState(false);
@@ -27,10 +26,7 @@ export const PriceCard = ({ data, latestUpdate }: PriceCardProps) => {
       const oldPrice = currentPrice;
       const newPrice = latestUpdate.price;
 
-      // Intentionally updating state from props - this is needed for real-time updates
-      // eslint-disable-next-line react-hooks/exhaustive-deps
       setCurrentPrice(newPrice);
-      setCurrentVolume(latestUpdate.volume || null);
       setLastUpdate(latestUpdate.timestamp);
 
       // Determine price direction
@@ -49,10 +45,7 @@ export const PriceCard = ({ data, latestUpdate }: PriceCardProps) => {
   // Initialize from data
   useEffect(() => {
     if (data.currentPrice) {
-      // Intentionally syncing state with props - this is needed for initialization
-      // eslint-disable-next-line react-hooks/exhaustive-deps
       setCurrentPrice(data.currentPrice.price);
-      setCurrentVolume(data.currentPrice.volume || null);
       setLastUpdate(data.currentPrice.timestamp);
     }
   }, [data.currentPrice]);
@@ -85,12 +78,12 @@ export const PriceCard = ({ data, latestUpdate }: PriceCardProps) => {
     <div
       className={`p-6 rounded-lg border shadow-sm transition-all duration-300 ${getBackgroundClass()}`}
     >
-      <div className="flex justify-between items-start mb-4">
+      <div className="flex items-start justify-between mb-4">
         <div>
           <h3 className="text-lg font-semibold text-gray-900">
             {pair.symbol}
           </h3>
-          <p className="text-sm text-gray-600 mt-1">
+          <p className="mt-1 text-sm text-gray-600">
             {pair.name}
           </p>
         </div>
@@ -107,13 +100,7 @@ export const PriceCard = ({ data, latestUpdate }: PriceCardProps) => {
         </div>
       </div>
 
-      <div className="pt-4 border-t border-gray-200 space-y-2 text-sm">
-        <div className="flex justify-between">
-          <span className="text-gray-600">Volume:</span>
-          <span className="font-medium text-gray-900">
-            {currentVolume !== null ? currentVolume.toFixed(4) : 'N/A'}
-          </span>
-        </div>
+      <div className="pt-4 space-y-2 text-sm border-t border-gray-200">
         <div className="flex justify-between">
           <span className="text-gray-600">Last Update:</span>
           <span className="font-medium text-gray-900">
@@ -121,6 +108,46 @@ export const PriceCard = ({ data, latestUpdate }: PriceCardProps) => {
           </span>
         </div>
       </div>
+
+      {data.latestHourlyAverage && (
+        <div className="pt-4 mt-4 border-t border-gray-200">
+          <h4 className="mb-2 text-xs font-semibold tracking-wider text-gray-700 uppercase">
+            Last Hour Average
+          </h4>
+          <div className="space-y-1.5 text-xs">
+            <div className="flex justify-between">
+              <span className="text-gray-600">Average:</span>
+              <span className="font-semibold text-indigo-600">
+                ${formatPrice(data.latestHourlyAverage.average)}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-600">High:</span>
+              <span className="font-medium text-green-600">
+                ${formatPrice(data.latestHourlyAverage.high)}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-600">Low:</span>
+              <span className="font-medium text-red-600">
+                ${formatPrice(data.latestHourlyAverage.low)}
+              </span>
+            </div>
+         
+            <div className="flex justify-between pt-1 mt-1 text-gray-500 border-t border-gray-100">
+              <span>Hour:</span>
+              <span>
+                {new Date(data.latestHourlyAverage.hour).toLocaleString(undefined, {
+                  month: 'short',
+                  day: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

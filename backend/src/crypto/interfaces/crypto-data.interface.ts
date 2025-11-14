@@ -50,6 +50,7 @@ export interface ICryptoData {
   pair: ICryptoPair;
   currentPrice?: IPrice;
   hourlyAverages: IHourlyAverage[];
+  latestHourlyAverage?: IHourlyAverage | null;
 }
 
 /**
@@ -65,4 +66,3 @@ export interface IPriceStats {
   change: number; // Percentage change
   changeAmount: number; // Absolute change
 }
-
