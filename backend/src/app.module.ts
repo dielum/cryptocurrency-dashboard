@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
+import { CryptoModule } from './crypto/crypto.module';
 
 /**
  * AppModule
@@ -12,6 +13,7 @@ import { PrismaModule } from './prisma/prisma.module';
  * Imports:
  * - ConfigModule: Manages environment variables globally
  * - PrismaModule: Provides database access throughout the app
+ * - CryptoModule: Handles cryptocurrency data management
  */
 @Module({
   imports: [
@@ -23,6 +25,8 @@ import { PrismaModule } from './prisma/prisma.module';
     }),
     // Global database module
     PrismaModule,
+    // Cryptocurrency data module
+    CryptoModule,
   ],
   controllers: [AppController],
   providers: [AppService],
