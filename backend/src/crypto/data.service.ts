@@ -440,4 +440,25 @@ export class DataService {
       pricesLast24Hours: recentPrices,
     };
   }
+
+  /**
+   * Get all cryptocurrency pairs
+   *
+   * @returns Array of all crypto pairs
+   */
+  async getAllPairs() {
+    return await this.prisma.cryptoPair.findMany({
+      where: { isActive: true },
+      orderBy: { symbol: 'asc' },
+    });
+  }
+
+  /**
+   * Alias for getStatistics() - used by controller
+   *
+   * @returns Statistics object with counts
+   */
+  async getStats() {
+    return await this.getStatistics();
+  }
 }

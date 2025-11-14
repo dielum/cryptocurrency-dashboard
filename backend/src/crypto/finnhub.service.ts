@@ -3,13 +3,17 @@ import {
   Logger,
   OnModuleInit,
   OnModuleDestroy,
+  Inject,
+  forwardRef,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import WebSocket from 'ws';
 import { DataService } from './data.service';
+import { CryptoGateway } from './crypto.gateway';
 import {
   IFinnhubMessage,
   IFinnhubSubscription,
+  IFinnhubTrade,
   SYMBOL_MAPPING,
   REVERSE_SYMBOL_MAPPING,
 } from './interfaces/finnhub-message.interface';
@@ -45,12 +49,19 @@ export class FinnhubService implements OnModuleInit, OnModuleDestroy {
   constructor(
     private readonly configService: ConfigService,
     private readonly dataService: DataService,
+    @Inject(forwardRef(() => CryptoGateway))
+    private readonly cryptoGateway: CryptoGateway,
   ) {
-    this.apiKey = this.configService.get<string>('FINNHUB_API_KEY') || '';
-    this.wsUrl = this.configService.get<string>('FINNHUB_WS_URL') || 'wss://ws.finnhub.io';
+    this.apiKey =
+      this.configService.get<string>('FINNHUB_API_KEY') || '';
+    this.wsUrl =
+      this.configService.get<string>('FINNHUB_WS_URL') ||
+      'wss://ws.finnhub.io';
 
     if (!this.apiKey) {
-      throw new Error('FINNHUB_API_KEY is not defined in environment variables');
+      throw new Error(
+        'FINNHUB_API_KEY is not defined in environment variables',
+      );
     }
   }
 
@@ -95,7 +106,9 @@ export class FinnhubService implements OnModuleInit, OnModuleDestroy {
 
       if (this.ws) {
         this.ws.on('open', () => this.handleOpen());
-        this.ws.on('message', (data: WebSocket.Data) => this.handleMessage(data));
+        this.ws.on('message', (data: WebSocket.Data) =>
+          this.handleMessage(data),
+        );
         this.ws.on('error', (error: Error) => this.handleError(error));
         this.ws.on('close', (code: number, reason: string) =>
           this.handleClose(code, reason),
@@ -116,6 +129,12 @@ export class FinnhubService implements OnModuleInit, OnModuleDestroy {
     this.reconnectAttempts = 0;
     this.logger.log('✓ Connected to Finnhub WebSocket');
 
+    // Notify clients about successful connection
+    this.cryptoGateway.broadcastConnectionStatus({
+      connected: true,
+      message: 'Connected to Finnhub data stream',
+    });
+
     // Subscribe to all cryptocurrency pairs
     this.subscribeToAll();
   }
@@ -135,7 +154,7 @@ export class FinnhubService implements OnModuleInit, OnModuleDestroy {
 
       // Handle trade data
       if (message.type === 'trade' && message.data) {
-        this.processTrades(message.data);
+        void this.processTrades(message.data);
       }
     } catch (error) {
       this.logger.error('Failed to parse message from Finnhub', error);
@@ -145,7 +164,7 @@ export class FinnhubService implements OnModuleInit, OnModuleDestroy {
   /**
    * Process trade data and save to database
    */
-  private async processTrades(trades: any[]): Promise<void> {
+  private async processTrades(trades: IFinnhubTrade[]): Promise<void> {
     for (const trade of trades) {
       try {
         // Convert Finnhub symbol to our symbol format
@@ -156,16 +175,21 @@ export class FinnhubService implements OnModuleInit, OnModuleDestroy {
           continue;
         }
 
-        // Save price to database
-        await this.dataService.savePrice({
+        const priceData = {
           symbol: ourSymbol,
           price: trade.p,
           volume: trade.v,
           timestamp: new Date(trade.t),
-        });
+        };
+
+        // Save price to database
+        await this.dataService.savePrice(priceData);
+
+        // Broadcast to connected WebSocket clients in real-time
+        this.cryptoGateway.broadcastPriceUpdate(priceData);
 
         this.logger.debug(
-          `Saved price: ${ourSymbol} = ${trade.p} at ${new Date(trade.t).toISOString()}`,
+          `Saved & broadcasted price: ${ourSymbol} = ${trade.p} at ${priceData.timestamp.toISOString()}`,
         );
       } catch (error) {
         this.logger.error('Failed to process trade', error);
@@ -189,6 +213,12 @@ export class FinnhubService implements OnModuleInit, OnModuleDestroy {
 
     const reasonStr = reason ? reason.toString() : 'No reason provided';
     this.logger.warn(`WebSocket closed. Code: ${code}, Reason: ${reasonStr}`);
+
+    // Notify clients about disconnection
+    this.cryptoGateway.broadcastConnectionStatus({
+      connected: false,
+      message: `Disconnected from Finnhub (Code: ${code})`,
+    });
 
     if (this.shouldReconnect) {
       this.scheduleReconnect();
