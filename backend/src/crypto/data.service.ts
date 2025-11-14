@@ -1,6 +1,6 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { PriceUpdateDto, HourlyAverageDto } from './dto';
+import { PriceUpdateDto } from './dto';
 import { ICryptoData, IPriceStats } from './interfaces/crypto-data.interface';
 
 /**
@@ -441,4 +441,3 @@ export class DataService {
     };
   }
 }
-

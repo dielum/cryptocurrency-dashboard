@@ -37,4 +37,3 @@ export class PriceUpdateDto {
   @Type(() => Date)
   timestamp: Date;
 }
-
