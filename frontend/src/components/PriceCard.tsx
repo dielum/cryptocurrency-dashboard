@@ -14,6 +14,8 @@ interface PriceCardProps {
 
 export const PriceCard = ({ data, latestUpdate }: PriceCardProps) => {
   const [currentPrice, setCurrentPrice] = useState(data.currentPrice?.price || 0);
+  const [currentVolume, setCurrentVolume] = useState(data.currentPrice?.volume || null);
+  const [lastUpdate, setLastUpdate] = useState(data.currentPrice?.timestamp || new Date().toISOString());
   const [priceChange, setPriceChange] = useState<'up' | 'down' | 'neutral'>('neutral');
   const [isFlashing, setIsFlashing] = useState(false);
 
@@ -25,7 +27,11 @@ export const PriceCard = ({ data, latestUpdate }: PriceCardProps) => {
       const oldPrice = currentPrice;
       const newPrice = latestUpdate.price;
 
+      // Intentionally updating state from props - this is needed for real-time updates
+      // eslint-disable-next-line react-hooks/exhaustive-deps
       setCurrentPrice(newPrice);
+      setCurrentVolume(latestUpdate.volume || null);
+      setLastUpdate(latestUpdate.timestamp);
 
       // Determine price direction
       if (newPrice > oldPrice) {
@@ -38,12 +44,16 @@ export const PriceCard = ({ data, latestUpdate }: PriceCardProps) => {
       setIsFlashing(true);
       setTimeout(() => setIsFlashing(false), 300);
     }
-  }, [latestUpdate, pair.symbol]);
+  }, [latestUpdate, pair.symbol, currentPrice]);
 
   // Initialize from data
   useEffect(() => {
     if (data.currentPrice) {
+      // Intentionally syncing state with props - this is needed for initialization
+      // eslint-disable-next-line react-hooks/exhaustive-deps
       setCurrentPrice(data.currentPrice.price);
+      setCurrentVolume(data.currentPrice.volume || null);
+      setLastUpdate(data.currentPrice.timestamp);
     }
   }, [data.currentPrice]);
 
@@ -97,22 +107,20 @@ export const PriceCard = ({ data, latestUpdate }: PriceCardProps) => {
         </div>
       </div>
 
-      {data.currentPrice && (
-        <div className="pt-4 border-t border-gray-200 space-y-2 text-sm">
-          <div className="flex justify-between">
-            <span className="text-gray-600">Volume:</span>
-            <span className="font-medium text-gray-900">
-              {data.currentPrice.volume?.toFixed(4) || 'N/A'}
-            </span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-gray-600">Last Update:</span>
-            <span className="font-medium text-gray-900">
-              {new Date(data.currentPrice.timestamp).toLocaleTimeString()}
-            </span>
-          </div>
+      <div className="pt-4 border-t border-gray-200 space-y-2 text-sm">
+        <div className="flex justify-between">
+          <span className="text-gray-600">Volume:</span>
+          <span className="font-medium text-gray-900">
+            {currentVolume !== null ? currentVolume.toFixed(4) : 'N/A'}
+          </span>
         </div>
-      )}
+        <div className="flex justify-between">
+          <span className="text-gray-600">Last Update:</span>
+          <span className="font-medium text-gray-900">
+            {new Date(lastUpdate).toLocaleTimeString()}
+          </span>
+        </div>
+      </div>
     </div>
   );
 };
