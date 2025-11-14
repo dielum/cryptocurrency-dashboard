@@ -16,7 +16,9 @@ export const Dashboard = () => {
   const [cryptoData, setCryptoData] = useState<AllCryptoData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [historicalPrices, setHistoricalPrices] = useState<Record<string, Array<{ price: number; timestamp: string }>>>({});
+  const [historicalPrices, setHistoricalPrices] = useState<
+    Record<string, Array<{ price: number; timestamp: string }>>
+  >({});
 
   const { isConnected, priceUpdates, finnhubStatus } = useWebSocket();
 
@@ -27,25 +29,28 @@ export const Dashboard = () => {
         setLoading(true);
         const data = await getAllCryptoData(24);
         setCryptoData(data);
-        
+
         // Load historical prices for charts
         const symbols = Object.keys(data);
         const pricesPromises = symbols.map(async (symbol) => {
           try {
             const prices = await getRecentPrices(symbol, 50);
             return { symbol, prices };
-          } catch (err) {
+          } catch {
             console.log(`No historical data for ${symbol}`);
             return { symbol, prices: [] };
           }
         });
-        
+
         const pricesData = await Promise.all(pricesPromises);
-        const pricesMap: Record<string, Array<{ price: number; timestamp: string }>> = {};
+        const pricesMap: Record<
+          string,
+          Array<{ price: number; timestamp: string }>
+        > = {};
         pricesData.forEach(({ symbol, prices }) => {
           pricesMap[symbol] = prices;
         });
-        
+
         setHistoricalPrices(pricesMap);
         setError(null);
       } catch (err) {
@@ -62,21 +67,23 @@ export const Dashboard = () => {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
-        <div className="w-12 h-12 border-4 border-gray-300 border-t-blue-600 rounded-full animate-spin" />
-        <p className="mt-4 text-gray-600 text-lg">Loading cryptocurrency data...</p>
+        <div className="w-12 h-12 border-4 border-gray-300 rounded-full border-t-blue-600 animate-spin" />
+        <p className="mt-4 text-lg text-gray-600">
+          Loading cryptocurrency data...
+        </p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 px-4">
-        <div className="text-6xl mb-4">⚠️</div>
-        <h2 className="text-3xl font-bold text-red-600 mb-4">Error</h2>
-        <p className="text-gray-600 text-lg mb-8">{error}</p>
+      <div className="flex flex-col items-center justify-center min-h-screen px-4 bg-gray-50">
+        <div className="mb-4 text-6xl">⚠️</div>
+        <h2 className="mb-4 text-3xl font-bold text-red-600">Error</h2>
+        <p className="mb-8 text-lg text-gray-600">{error}</p>
         <button
           onClick={() => window.location.reload()}
-          className="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-base font-medium transition-colors"
+          className="px-8 py-3 text-base font-medium text-white transition-colors bg-blue-600 rounded-lg hover:bg-blue-700"
         >
           Retry
         </button>
@@ -87,7 +94,7 @@ export const Dashboard = () => {
   if (!cryptoData) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50">
-        <p className="text-gray-600 text-lg">No data available</p>
+        <p className="text-lg text-gray-600">No data available</p>
       </div>
     );
   }
@@ -98,13 +105,15 @@ export const Dashboard = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 px-6 py-4">
-        <div className="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-4">
+      <header className="px-6 py-4 bg-white border-b border-gray-200">
+        <div className="flex flex-wrap items-center justify-between gap-4 mx-auto max-w-7xl">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">
               Cryptocurrency Dashboard
             </h1>
-            <p className="text-sm text-gray-600 mt-1">Real-time price tracking</p>
+            <p className="mt-1 text-sm text-gray-600">
+              Real-time price tracking
+            </p>
           </div>
           <ConnectionStatus
             isWebSocketConnected={isConnected}
@@ -113,9 +122,9 @@ export const Dashboard = () => {
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-6 py-8">
+      <div className="px-6 py-8 mx-auto max-w-7xl">
         {/* Price Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 gap-6 mb-8 md:grid-cols-3">
           {symbols.map((symbol) => (
             <PriceCard
               key={symbol}
@@ -127,8 +136,10 @@ export const Dashboard = () => {
 
         {/* Charts Section */}
         <div className="mb-8">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Price Charts</h2>
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+          <h2 className="mb-4 text-xl font-semibold text-gray-900">
+            Price Charts
+          </h2>
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 xl:grid-cols-3">
             {symbols.map((symbol) => (
               <PriceChart
                 key={symbol}
@@ -141,24 +152,26 @@ export const Dashboard = () => {
         </div>
 
         {/* Recent Updates Table */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
           <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-xl font-semibold text-gray-900">Recent Updates</h2>
+            <h2 className="text-xl font-semibold text-gray-900">
+              Recent Updates
+            </h2>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
                     Symbol
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-xs font-medium tracking-wider text-right text-gray-500 uppercase">
                     Price
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-xs font-medium tracking-wider text-right text-gray-500 uppercase">
                     Volume
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-xs font-medium tracking-wider text-right text-gray-500 uppercase">
                     Time
                   </th>
                 </tr>
@@ -166,23 +179,26 @@ export const Dashboard = () => {
               <tbody className="bg-white divide-y divide-gray-200">
                 {priceUpdates.slice(0, 10).map((update, index) => (
                   <tr key={index} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                    <td className="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">
                       {update.symbol}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-green-600 font-semibold">
+                    <td className="px-6 py-4 text-sm font-semibold text-right text-green-600 whitespace-nowrap">
                       ${update.price.toFixed(6)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-600">
+                    <td className="px-6 py-4 text-sm text-right text-gray-600 whitespace-nowrap">
                       {update.volume?.toFixed(4) || 'N/A'}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-500">
+                    <td className="px-6 py-4 text-sm text-right text-gray-500 whitespace-nowrap">
                       {new Date(update.timestamp).toLocaleTimeString()}
                     </td>
                   </tr>
                 ))}
                 {priceUpdates.length === 0 && (
                   <tr>
-                    <td colSpan={4} className="px-6 py-8 text-center text-gray-500">
+                    <td
+                      colSpan={4}
+                      className="px-6 py-8 text-center text-gray-500"
+                    >
                       Waiting for real-time updates...
                     </td>
                   </tr>

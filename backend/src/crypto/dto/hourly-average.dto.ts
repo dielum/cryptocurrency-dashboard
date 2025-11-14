@@ -49,4 +49,3 @@ export class HourlyAverageDto {
   @Min(1)
   count: number;
 }
-

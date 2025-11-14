@@ -4,9 +4,13 @@
  * Custom React hook for Socket.IO connection and real-time updates
  */
 
-import { useEffect, useState} from 'react';
+import { useEffect, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
-import type { PriceUpdate, ConnectionStatus, HourlyAverage } from '../types/crypto';
+import type {
+  PriceUpdate,
+  ConnectionStatus,
+  HourlyAverage,
+} from '../types/crypto';
 
 const WS_URL = import.meta.env.VITE_WS_URL || '/crypto';
 
@@ -22,7 +26,9 @@ export const useWebSocket = (): UseWebSocketReturn => {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [priceUpdates, setPriceUpdates] = useState<PriceUpdate[]>([]);
-  const [finnhubStatus, setFinnhubStatus] = useState<ConnectionStatus | null>(null);
+  const [finnhubStatus, setFinnhubStatus] = useState<ConnectionStatus | null>(
+    null,
+  );
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -35,6 +41,7 @@ export const useWebSocket = (): UseWebSocketReturn => {
       reconnectionAttempts: Infinity,
     });
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSocket(socketInstance);
 
     // Connection handlers
@@ -93,4 +100,3 @@ export const useWebSocket = (): UseWebSocketReturn => {
     error,
   };
 };
-

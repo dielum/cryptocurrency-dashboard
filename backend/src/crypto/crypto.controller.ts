@@ -50,7 +50,10 @@ export class CryptoController {
         count: pairs.length,
       };
     } catch (error) {
-      this.logger.error('Error fetching pairs', error.stack);
+      this.logger.error(
+        'Error fetching pairs',
+        error instanceof Error ? error.stack : String(error),
+      );
       throw new HttpException(
         'Failed to fetch crypto pairs',
         HttpStatus.INTERNAL_SERVER_ERROR,
@@ -74,14 +77,9 @@ export class CryptoController {
   ) {
     try {
       const priceLimit = limit ? parseInt(limit, 10) : 100;
-      this.logger.log(
-        `Fetching ${priceLimit} prices for ${symbol}`,
-      );
+      this.logger.log(`Fetching ${priceLimit} prices for ${symbol}`);
 
-      const prices = await this.dataService.getRecentPrices(
-        symbol,
-        priceLimit,
-      );
+      const prices = await this.dataService.getRecentPrices(symbol, priceLimit);
 
       if (prices.length === 0) {
         throw new HttpException(
@@ -104,7 +102,7 @@ export class CryptoController {
       }
       this.logger.error(
         `Error fetching prices for ${symbol}`,
-        error.stack,
+        error instanceof Error ? error.stack : String(error),
       );
       throw new HttpException(
         'Failed to fetch prices',
@@ -129,9 +127,7 @@ export class CryptoController {
   ) {
     try {
       const hoursBack = hours ? parseInt(hours, 10) : 24;
-      this.logger.log(
-        `Fetching ${hoursBack} hourly averages for ${symbol}`,
-      );
+      this.logger.log(`Fetching ${hoursBack} hourly averages for ${symbol}`);
 
       const averages = await this.dataService.getHourlyAverages(
         symbol,
@@ -150,7 +146,7 @@ export class CryptoController {
     } catch (error) {
       this.logger.error(
         `Error fetching hourly averages for ${symbol}`,
-        error.stack,
+        error instanceof Error ? error.stack : String(error),
       );
       throw new HttpException(
         'Failed to fetch hourly averages',
@@ -205,7 +201,10 @@ export class CryptoController {
         hoursBack,
       };
     } catch (error) {
-      this.logger.error('Error fetching all crypto data', error.stack);
+      this.logger.error(
+        'Error fetching all crypto data',
+        error instanceof Error ? error.stack : String(error),
+      );
       throw new HttpException(
         'Failed to fetch crypto data',
         HttpStatus.INTERNAL_SERVER_ERROR,
@@ -230,7 +229,10 @@ export class CryptoController {
         data: stats,
       };
     } catch (error) {
-      this.logger.error('Error fetching stats', error.stack);
+      this.logger.error(
+        'Error fetching stats',
+        error instanceof Error ? error.stack : String(error),
+      );
       throw new HttpException(
         'Failed to fetch statistics',
         HttpStatus.INTERNAL_SERVER_ERROR,
@@ -238,4 +240,3 @@ export class CryptoController {
     }
   }
 }
-

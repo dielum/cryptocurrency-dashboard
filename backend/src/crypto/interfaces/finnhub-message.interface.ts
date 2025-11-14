@@ -58,4 +58,3 @@ export const REVERSE_SYMBOL_MAPPING: Record<string, string> = {
   'BINANCE:ETHUSDT': 'ETH/USDT',
   'BINANCE:ETHBTC': 'ETH/BTC',
 };
-

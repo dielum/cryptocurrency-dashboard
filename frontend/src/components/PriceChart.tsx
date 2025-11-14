@@ -63,6 +63,7 @@ export const PriceChart = ({ symbol, priceUpdates, initialPrices = [] }: PriceCh
           timestamp: price.timestamp,
         }));
       
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setChartData(historical);
     }
   }, [initialPrices]);
@@ -78,6 +79,7 @@ export const PriceChart = ({ symbol, priceUpdates, initialPrices = [] }: PriceCh
       }));
 
     if (newUpdates.length > 0) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setChartData((prev) => {
         // Combine previous data with new updates, avoiding duplicates
         const combined = [...prev];

@@ -94,13 +94,11 @@ export class PrismaService
    */
   async getDatabaseStats() {
     try {
-      const [pairsCount, pricesCount, hourlyAveragesCount] = await Promise.all(
-        [
-          this.cryptoPair.count(),
-          this.price.count(),
-          this.hourlyAverage.count(),
-        ],
-      );
+      const [pairsCount, pricesCount, hourlyAveragesCount] = await Promise.all([
+        this.cryptoPair.count(),
+        this.price.count(),
+        this.hourlyAverage.count(),
+      ]);
 
       return {
         pairs: pairsCount,
@@ -113,4 +111,3 @@ export class PrismaService
     }
   }
 }
-

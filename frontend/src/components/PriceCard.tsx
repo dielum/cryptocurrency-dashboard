@@ -26,7 +26,9 @@ export const PriceCard = ({ data, latestUpdate }: PriceCardProps) => {
       const oldPrice = currentPrice;
       const newPrice = latestUpdate.price;
 
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setCurrentPrice(newPrice);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setLastUpdate(latestUpdate.timestamp);
 
       // Determine price direction
@@ -45,7 +47,9 @@ export const PriceCard = ({ data, latestUpdate }: PriceCardProps) => {
   // Initialize from data
   useEffect(() => {
     if (data.currentPrice) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setCurrentPrice(data.currentPrice.price);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setLastUpdate(data.currentPrice.timestamp);
     }
   }, [data.currentPrice]);

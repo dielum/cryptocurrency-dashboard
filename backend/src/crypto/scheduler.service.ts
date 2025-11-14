@@ -56,7 +56,7 @@ export class SchedulerService {
         } catch (error) {
           this.logger.error(
             `Failed to calculate hourly average for ${pair.symbol}`,
-            error.stack,
+            error instanceof Error ? error.stack : String(error),
           );
           return null;
         }
@@ -72,7 +72,7 @@ export class SchedulerService {
     } catch (error) {
       this.logger.error(
         'Failed to execute hourly average calculation',
-        error.stack,
+        error instanceof Error ? error.stack : String(error),
       );
     }
   }
@@ -81,31 +81,37 @@ export class SchedulerService {
    * Calculate hourly average for the previous hour on startup
    * This ensures we have data for the current hour even if the app just started
    */
-  async onModuleInit() {
+  onModuleInit() {
     this.logger.log('🚀 Scheduler service initialized');
     this.logger.log('⏰ Next hourly calculation at: top of next hour (UTC)');
 
     // Calculate averages for the previous hour on startup
     // This is helpful if the app restarts mid-hour
-    setTimeout(async () => {
-      this.logger.log('📊 Calculating initial hourly averages...');
-
-      const pairs = await this.dataService.getActivePairs();
-
-      for (const pair of pairs) {
-        try {
-          // Calculate for current hour
-          await this.dataService.calculateHourlyAverage(pair.symbol);
-        } catch (error) {
-          this.logger.error(
-            `Failed initial hourly average for ${pair.symbol}`,
-            error.stack,
-          );
-        }
-      }
-
-      this.logger.log('✅ Initial hourly averages calculation completed');
+    setTimeout(() => {
+      void this.calculateInitialAverages();
     }, 5000); // Wait 5 seconds after startup to allow data collection
   }
-}
 
+  /**
+   * Calculate initial hourly averages on startup
+   */
+  private async calculateInitialAverages() {
+    this.logger.log('📊 Calculating initial hourly averages...');
+
+    const pairs = await this.dataService.getActivePairs();
+
+    for (const pair of pairs) {
+      try {
+        // Calculate for current hour
+        await this.dataService.calculateHourlyAverage(pair.symbol);
+      } catch (error) {
+        this.logger.error(
+          `Failed initial hourly average for ${pair.symbol}`,
+          error instanceof Error ? error.stack : String(error),
+        );
+      }
+    }
+
+    this.logger.log('✅ Initial hourly averages calculation completed');
+  }
+}

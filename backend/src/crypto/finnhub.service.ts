@@ -52,11 +52,9 @@ export class FinnhubService implements OnModuleInit, OnModuleDestroy {
     @Inject(forwardRef(() => CryptoGateway))
     private readonly cryptoGateway: CryptoGateway,
   ) {
-    this.apiKey =
-      this.configService.get<string>('FINNHUB_API_KEY') || '';
+    this.apiKey = this.configService.get<string>('FINNHUB_API_KEY') || '';
     this.wsUrl =
-      this.configService.get<string>('FINNHUB_WS_URL') ||
-      'wss://ws.finnhub.io';
+      this.configService.get<string>('FINNHUB_WS_URL') || 'wss://ws.finnhub.io';
 
     if (!this.apiKey) {
       throw new Error(
@@ -68,15 +66,15 @@ export class FinnhubService implements OnModuleInit, OnModuleDestroy {
   /**
    * Initialize WebSocket connection when module starts
    */
-  async onModuleInit() {
+  onModuleInit() {
     this.logger.log('Initializing Finnhub WebSocket service...');
-    await this.connect();
+    this.connect();
   }
 
   /**
    * Clean up WebSocket connection when module is destroyed
    */
-  async onModuleDestroy() {
+  onModuleDestroy() {
     this.logger.log('Shutting down Finnhub WebSocket service...');
     this.shouldReconnect = false;
 
@@ -91,8 +89,11 @@ export class FinnhubService implements OnModuleInit, OnModuleDestroy {
   /**
    * Connect to Finnhub WebSocket
    */
-  private async connect(): Promise<void> {
-    if (this.isConnecting || (this.ws && this.ws.readyState === WebSocket.OPEN)) {
+  private connect(): void {
+    if (
+      this.isConnecting ||
+      (this.ws && this.ws.readyState === WebSocket.OPEN)
+    ) {
       return;
     }
 
@@ -144,7 +145,20 @@ export class FinnhubService implements OnModuleInit, OnModuleDestroy {
    */
   private handleMessage(data: WebSocket.Data): void {
     try {
-      const message: IFinnhubMessage = JSON.parse(data.toString());
+      // Convert WebSocket.Data to string safely
+      let messageStr: string;
+      if (typeof data === 'string') {
+        messageStr = data;
+      } else if (Buffer.isBuffer(data)) {
+        messageStr = data.toString('utf8');
+      } else if (Array.isArray(data)) {
+        messageStr = Buffer.concat(data).toString('utf8');
+      } else {
+        this.logger.error('Received unknown data type from WebSocket');
+        return;
+      }
+
+      const message = JSON.parse(messageStr) as IFinnhubMessage;
 
       // Handle ping messages (keepalive)
       if (message.type === 'ping') {
@@ -247,7 +261,7 @@ export class FinnhubService implements OnModuleInit, OnModuleDestroy {
 
     this.reconnectTimeout = setTimeout(() => {
       this.reconnectTimeout = null;
-      this.connect();
+      void this.connect();
     }, delay);
   }
 
@@ -257,11 +271,11 @@ export class FinnhubService implements OnModuleInit, OnModuleDestroy {
   private disconnect(): void {
     if (this.ws) {
       this.ws.removeAllListeners();
-      
+
       if (this.ws.readyState === WebSocket.OPEN) {
         this.ws.close();
       }
-      
+
       this.ws = null;
       this.logger.log('Disconnected from Finnhub WebSocket');
     }
@@ -285,7 +299,9 @@ export class FinnhubService implements OnModuleInit, OnModuleDestroy {
    */
   private subscribe(finnhubSymbol: string): void {
     if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
-      this.logger.warn(`Cannot subscribe to ${finnhubSymbol} - WebSocket not open`);
+      this.logger.warn(
+        `Cannot subscribe to ${finnhubSymbol} - WebSocket not open`,
+      );
       return;
     }
 
@@ -348,11 +364,10 @@ export class FinnhubService implements OnModuleInit, OnModuleDestroy {
   /**
    * Manually trigger reconnection
    */
-  async reconnect(): Promise<void> {
+  reconnect(): void {
     this.logger.log('Manual reconnection triggered');
     this.disconnect();
     this.reconnectAttempts = 0;
-    await this.connect();
+    this.connect();
   }
 }
-
