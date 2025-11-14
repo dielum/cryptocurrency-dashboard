@@ -33,7 +33,7 @@ const FIVE_MINUTES_MS = 5 * 60 * 1000; // 5 minutes in milliseconds
 
 export const PriceChart = ({ symbol, priceUpdates, initialPrices = [] }: PriceChartProps) => {
   const [chartData, setChartData] = useState<ChartDataPoint[]>([]);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const intervalRef = useRef<number | null>(null);
 
   // Filter data to only show last 5 minutes
   const filterLast5Minutes = (data: ChartDataPoint[]): ChartDataPoint[] => {

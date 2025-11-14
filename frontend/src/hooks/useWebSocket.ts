@@ -4,11 +4,11 @@
  * Custom React hook for Socket.IO connection and real-time updates
  */
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState} from 'react';
 import { io, Socket } from 'socket.io-client';
 import type { PriceUpdate, ConnectionStatus, HourlyAverage } from '../types/crypto';
 
-const WS_URL = import.meta.env.VITE_WS_URL || 'http://localhost:3001/crypto';
+const WS_URL = import.meta.env.VITE_WS_URL || '/crypto';
 
 interface UseWebSocketReturn {
   socket: Socket | null;

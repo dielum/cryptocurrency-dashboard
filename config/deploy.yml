@@ -1,0 +1,58 @@
+# Kamal 2.0 deployment configuration for Cryptocurrency Dashboard
+# Documentation: https://kamal-deploy.org
+
+service: crypto-dashboard
+
+# Docker image configuration (single image for both frontend and backend)
+image: dielume/crypto-dashboard
+
+# Servers configuration
+servers:
+  web:
+    hosts:
+      - 15.235.47.128
+
+# Registry credentials (for Docker Hub or private registry)
+registry:
+  username: dielume
+  password:
+    - KAMAL_REGISTRY_PASSWORD
+
+# Environment variables
+env:
+  clear:
+    NODE_ENV: production
+    PORT: 3001
+    FRONTEND_URL: https://dielum.site
+  secret:
+    - FINNHUB_API_KEY
+    - FINNHUB_WS_URL
+    - DATABASE_URL
+
+# Volumes for persistent database storage
+# OPCIÓN 1: Docker volumes (recomendado para producción)
+volumes:
+  - /var/lib/crypto-dashboard/data:/app/backend/prisma/data
+
+# Proxy configuration (kamal-proxy)
+proxy:
+  ssl: true
+  host: dielum.site
+  app_port: 80
+  healthcheck:
+    path: /health
+    interval: 10
+    timeout: 5
+
+# SSH configuration
+ssh:
+  user: ubuntu
+
+# Retain previous containers for easy rollback
+retain_containers: 5
+
+# Builder configuration
+builder:
+  arch: amd64
+  args:
+    DATABASE_URL: $DATABASE_URL
