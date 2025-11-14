@@ -56,6 +56,16 @@ frontend/.env
 .temp
 .tmp
 
+# Database files (SQLite)
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+backend/prisma/*.db
+backend/prisma/*.db-journal
+prisma/*.db
+prisma/*.db-journal
+
 # Runtime data
 pids
 *.pid

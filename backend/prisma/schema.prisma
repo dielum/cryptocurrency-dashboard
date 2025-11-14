@@ -1,0 +1,68 @@
+// Prisma Schema for Cryptocurrency Dashboard
+// Database: SQLite (development) - can be migrated to PostgreSQL for production
+// Learn more: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// CryptoPair Model
+// Represents the cryptocurrency trading pairs we track
+model CryptoPair {
+  id        String   @id @default(uuid())
+  symbol    String   @unique // e.g., "ETH/USDC", "ETH/USDT", "ETH/BTC"
+  name      String // e.g., "Ethereum to USD Coin"
+  isActive  Boolean  @default(true) // Flag to enable/disable tracking
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  prices         Price[]
+  hourlyAverages HourlyAverage[]
+
+  @@map("crypto_pairs")
+}
+
+// Price Model
+// Stores individual price data points from Finnhub WebSocket
+model Price {
+  id        String   @id @default(uuid())
+  pairId    String
+  pair      CryptoPair @relation(fields: [pairId], references: [id], onDelete: Cascade)
+  
+  price     Float // Current price of the pair
+  volume    Float? // Trading volume (optional)
+  timestamp DateTime @default(now()) // When this price was recorded
+  
+  // Indexes for efficient queries
+  @@index([pairId, timestamp], name: "idx_pair_timestamp")
+  @@index([timestamp], name: "idx_timestamp")
+  @@map("prices")
+}
+
+// HourlyAverage Model
+// Stores calculated hourly statistics for each cryptocurrency pair
+model HourlyAverage {
+  id        String   @id @default(uuid())
+  pairId    String
+  pair      CryptoPair @relation(fields: [pairId], references: [id], onDelete: Cascade)
+  
+  hour      DateTime // Hour bucket (rounded to start of hour)
+  average   Float // Average price for this hour
+  high      Float // Highest price in this hour
+  low       Float // Lowest price in this hour
+  count     Int // Number of price points used for calculation
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Ensure one record per pair per hour
+  @@unique([pairId, hour], name: "unique_pair_hour")
+  @@index([pairId, hour], name: "idx_pair_hour")
+  @@map("hourly_averages")
+}
