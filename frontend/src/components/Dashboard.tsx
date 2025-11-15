@@ -17,7 +17,8 @@ export const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const { isConnected, priceUpdates, hourlyAverages, finnhubStatus } = useWebSocket();
+  const { isConnected, priceUpdates, hourlyAverages, finnhubStatus } =
+    useWebSocket();
 
   // Fetch initial exchange rates on mount
   useEffect(() => {
@@ -74,7 +75,16 @@ export const Dashboard = () => {
   }
 
   const symbols = Object.keys(cryptoData);
-  const latestUpdate = priceUpdates[0];
+
+  // Get the latest price update for each symbol
+  const getLatestPriceForSymbol = (symbol: string) => {
+    const latestUpdate = priceUpdates.find(
+      (update) => update.symbol === symbol,
+    );
+    return latestUpdate
+      ? { price: latestUpdate.price, timestamp: latestUpdate.timestamp }
+      : null;
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -99,14 +109,18 @@ export const Dashboard = () => {
       <div className="px-6 py-8 mx-auto max-w-7xl">
         {/* Price Cards */}
         <div className="grid grid-cols-1 gap-6 mb-8 md:grid-cols-3">
-          {symbols.map((symbol) => (
-            <PriceCard
-              key={symbol}
-              data={cryptoData[symbol]}
-              latestUpdate={latestUpdate}
-              latestHourlyAverage={hourlyAverages[symbol]}
-            />
-          ))}
+          {symbols.map((symbol) => {
+            const latestPrice = getLatestPriceForSymbol(symbol);
+            return (
+              <PriceCard
+                key={symbol}
+                data={cryptoData[symbol]}
+                currentPrice={latestPrice?.price}
+                lastUpdate={latestPrice?.timestamp}
+                latestHourlyAverage={hourlyAverages[symbol]}
+              />
+            );
+          })}
         </div>
 
         {/* Charts Section */}
