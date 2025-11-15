@@ -29,11 +29,18 @@ export interface HourlyAverage {
   count: number;
 }
 
+export interface RecentPrice {
+  price: number;
+  volume?: number | null;
+  timestamp: string;
+}
+
 export interface CryptoData {
   pair: CryptoPair;
   currentPrice?: Price;
   hourlyAverages: HourlyAverage[];
   latestHourlyAverage?: HourlyAverage | null;
+  recentPrices?: RecentPrice[]; // Prices from last 5 minutes
 }
 
 export interface AllCryptoData {

@@ -119,6 +119,7 @@ export const Dashboard = () => {
                 key={symbol}
                 symbol={symbol}
                 priceUpdates={priceUpdates}
+                initialPrices={cryptoData[symbol].recentPrices}
               />
             ))}
           </div>

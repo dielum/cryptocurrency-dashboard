@@ -15,11 +15,12 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts';
-import type { PriceUpdate } from '../types/crypto';
+import type { PriceUpdate, RecentPrice } from '../types/crypto';
 
 interface PriceChartProps {
   symbol: string;
   priceUpdates: PriceUpdate[];
+  initialPrices?: RecentPrice[]; // Prices from last 5 minutes from initial load
 }
 
 interface ChartDataPoint {
@@ -30,20 +31,50 @@ interface ChartDataPoint {
 
 const FIVE_MINUTES_MS = 5 * 60 * 1000; // 5 minutes in milliseconds
 
-export const PriceChart = ({ symbol, priceUpdates }: PriceChartProps) => {
+export const PriceChart = ({
+  symbol,
+  priceUpdates,
+  initialPrices = [],
+}: PriceChartProps) => {
   const [chartData, setChartData] = useState<ChartDataPoint[]>([]);
   const intervalRef = useRef<number | null>(null);
+  const initializedRef = useRef(false);
 
   // Filter data to only show last 5 minutes
   const filterLast5Minutes = (data: ChartDataPoint[]): ChartDataPoint[] => {
     const now = Date.now();
     const fiveMinutesAgo = now - FIVE_MINUTES_MS;
-    
+
     return data.filter((point) => {
       const pointTime = new Date(point.timestamp).getTime();
       return pointTime >= fiveMinutesAgo;
     });
   };
+
+  // Initialize with historical data from API (last 5 minutes)
+  useEffect(() => {
+    if (initialPrices.length > 0 && !initializedRef.current) {
+      const now = Date.now();
+      const fiveMinutesAgo = now - FIVE_MINUTES_MS;
+
+      const historical = initialPrices
+        .filter((price) => {
+          const priceTime = new Date(price.timestamp).getTime();
+          return priceTime >= fiveMinutesAgo;
+        })
+        .map((price) => ({
+          time: new Date(price.timestamp).toLocaleTimeString(),
+          price: price.price,
+          timestamp: price.timestamp,
+        }));
+
+      if (historical.length > 0) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setChartData(historical);
+        initializedRef.current = true;
+      }
+    }
+  }, [initialPrices]);
 
   // Add new real-time updates
   useEffect(() => {

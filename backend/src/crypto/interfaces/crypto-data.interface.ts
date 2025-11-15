@@ -44,6 +44,15 @@ export interface IHourlyAverage {
 }
 
 /**
+ * Represents a recent price point (simplified for API responses)
+ */
+export interface IRecentPrice {
+  price: number;
+  volume?: number | null;
+  timestamp: string;
+}
+
+/**
  * Complete cryptocurrency data with current price and averages
  */
 export interface ICryptoData {
@@ -51,6 +60,7 @@ export interface ICryptoData {
   currentPrice?: IPrice;
   hourlyAverages: IHourlyAverage[];
   latestHourlyAverage?: IHourlyAverage | null;
+  recentPrices?: IRecentPrice[]; // Prices from last 5 minutes
 }
 
 /**

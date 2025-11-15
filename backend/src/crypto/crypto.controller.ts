@@ -55,14 +55,23 @@ export class CryptoController {
       const pairs = await this.dataService.getAllPairs();
       const result: Record<string, any> = {};
 
-      // Fetch current data for each pair in parallel
+      // Fetch current data and recent prices (last 5 minutes) for each pair in parallel
       await Promise.all(
         pairs.map(async (pair) => {
-          const cryptoData = await this.dataService.getCryptoData(
-            pair.symbol,
-            1,
-          );
-          result[pair.symbol] = cryptoData;
+          const [cryptoData, recentPrices] = await Promise.all([
+            this.dataService.getCryptoData(pair.symbol, 1),
+            this.dataService.getRecentPricesByMinutes(pair.symbol, 5),
+          ]);
+
+          // Add recent prices to the response
+          result[pair.symbol] = {
+            ...cryptoData,
+            recentPrices: recentPrices.map((price) => ({
+              price: price.price,
+              volume: price.volume,
+              timestamp: price.timestamp.toISOString(),
+            })),
+          };
         }),
       );
 

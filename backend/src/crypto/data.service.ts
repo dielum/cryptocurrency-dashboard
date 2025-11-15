@@ -134,6 +134,34 @@ export class DataService {
   }
 
   /**
+   * Get prices from the last N minutes for a cryptocurrency pair
+   *
+   * @param symbol - Trading pair symbol
+   * @param minutes - Number of minutes to look back (default: 5)
+   * @returns Array of prices from the last N minutes
+   */
+  async getRecentPricesByMinutes(symbol: string, minutes: number = 5) {
+    const pair = await this.getPairBySymbol(symbol);
+
+    if (!pair) {
+      throw new NotFoundException(`Cryptocurrency pair ${symbol} not found`);
+    }
+
+    const cutoffTime = new Date();
+    cutoffTime.setMinutes(cutoffTime.getMinutes() - minutes);
+
+    return await this.prisma.price.findMany({
+      where: {
+        pairId: pair.id,
+        timestamp: {
+          gte: cutoffTime,
+        },
+      },
+      orderBy: { timestamp: 'asc' },
+    });
+  }
+
+  /**
    * Calculate and save hourly average for a cryptocurrency pair
    * Should be called every hour or when requested
    *
