@@ -1,7 +1,7 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { PriceUpdateDto } from './dto';
-import { ICryptoData, IPriceStats } from './interfaces/crypto-data.interface';
+import { ICryptoData } from './interfaces/crypto-data.interface';
 
 /**
  * DataService
@@ -41,15 +41,13 @@ export class DataService {
     for (const pair of pairs) {
       await this.prisma.cryptoPair.upsert({
         where: { symbol: pair.symbol },
-        update: { isActive: true }, // Reactivate if it was disabled
+        update: { isActive: true },
         create: {
           symbol: pair.symbol,
           name: pair.name,
           isActive: true,
         },
       });
-
-      this.logger.log(`✓ Initialized ${pair.symbol}`);
     }
 
     this.logger.log('All cryptocurrency pairs initialized successfully');
@@ -133,28 +131,6 @@ export class DataService {
     });
 
     return price;
-  }
-
-  /**
-   * Get recent prices for a cryptocurrency pair
-   * Useful for displaying short-term price history
-   *
-   * @param symbol - Trading pair symbol
-   * @param limit - Maximum number of prices to return (default: 100)
-   * @returns Array of recent prices
-   */
-  async getRecentPrices(symbol: string, limit: number = 100) {
-    const pair = await this.getPairBySymbol(symbol);
-
-    if (!pair) {
-      throw new NotFoundException(`Cryptocurrency pair ${symbol} not found`);
-    }
-
-    return await this.prisma.price.findMany({
-      where: { pairId: pair.id },
-      orderBy: { timestamp: 'desc' },
-      take: limit,
-    });
   }
 
   /**
@@ -317,155 +293,6 @@ export class DataService {
   }
 
   /**
-   * Get all cryptocurrency data for all active pairs
-   * Used for initial data load on frontend
-   *
-   * @param hoursHistory - Number of hours of history to include
-   * @returns Array of complete crypto data for all pairs
-   */
-  async getAllCryptoData(hoursHistory: number = 24): Promise<ICryptoData[]> {
-    const pairs = await this.getActivePairs();
-
-    const dataPromises = pairs.map((pair) =>
-      this.getCryptoData(pair.symbol, hoursHistory),
-    );
-
-    return await Promise.all(dataPromises);
-  }
-
-  /**
-   * Calculate price statistics for a time period
-   *
-   * @param symbol - Trading pair symbol
-   * @param startDate - Start of the period
-   * @param endDate - End of the period
-   * @returns Price statistics
-   */
-  async getPriceStats(
-    symbol: string,
-    startDate: Date,
-    endDate: Date,
-  ): Promise<IPriceStats | null> {
-    const pair = await this.getPairBySymbol(symbol);
-
-    if (!pair) {
-      throw new NotFoundException(`Cryptocurrency pair ${symbol} not found`);
-    }
-
-    const prices = await this.prisma.price.findMany({
-      where: {
-        pairId: pair.id,
-        timestamp: {
-          gte: startDate,
-          lte: endDate,
-        },
-      },
-      orderBy: { timestamp: 'asc' },
-    });
-
-    if (prices.length === 0) {
-      return null;
-    }
-
-    const priceValues = prices.map((p) => p.price);
-    const sum = priceValues.reduce((a, b) => a + b, 0);
-    const average = sum / priceValues.length;
-    const high = Math.max(...priceValues);
-    const low = Math.min(...priceValues);
-    const firstPrice = prices[0].price;
-    const lastPrice = prices[prices.length - 1].price;
-    const changeAmount = lastPrice - firstPrice;
-    const change = (changeAmount / firstPrice) * 100;
-
-    return {
-      average,
-      high,
-      low,
-      count: prices.length,
-      firstPrice,
-      lastPrice,
-      change,
-      changeAmount,
-    };
-  }
-
-  /**
-   * Clean old price data
-   * Removes price records older than specified days
-   * Should be called periodically (e.g., daily via cron job)
-   *
-   * @param days - Number of days to retain data
-   * @returns Number of deleted records
-   */
-  async cleanOldPrices(days: number = 7): Promise<number> {
-    const cutoffDate = new Date();
-    cutoffDate.setDate(cutoffDate.getDate() - days);
-
-    const result = await this.prisma.price.deleteMany({
-      where: {
-        timestamp: { lt: cutoffDate },
-      },
-    });
-
-    this.logger.log(
-      `Cleaned ${result.count} price records older than ${days} days`,
-    );
-
-    return result.count;
-  }
-
-  /**
-   * Clean old hourly averages
-   * Removes hourly average records older than specified days
-   *
-   * @param days - Number of days to retain data
-   * @returns Number of deleted records
-   */
-  async cleanOldHourlyAverages(days: number = 30): Promise<number> {
-    const cutoffDate = new Date();
-    cutoffDate.setDate(cutoffDate.getDate() - days);
-
-    const result = await this.prisma.hourlyAverage.deleteMany({
-      where: {
-        hour: { lt: cutoffDate },
-      },
-    });
-
-    this.logger.log(
-      `Cleaned ${result.count} hourly average records older than ${days} days`,
-    );
-
-    return result.count;
-  }
-
-  /**
-   * Get database statistics for monitoring
-   *
-   * @returns Statistics object with counts
-   */
-  async getStatistics() {
-    const [pairs, prices, hourlyAverages, recentPrices] = await Promise.all([
-      this.prisma.cryptoPair.count({ where: { isActive: true } }),
-      this.prisma.price.count(),
-      this.prisma.hourlyAverage.count(),
-      this.prisma.price.count({
-        where: {
-          timestamp: {
-            gte: new Date(Date.now() - 24 * 60 * 60 * 1000), // Last 24 hours
-          },
-        },
-      }),
-    ]);
-
-    return {
-      activePairs: pairs,
-      totalPrices: prices,
-      totalHourlyAverages: hourlyAverages,
-      pricesLast24Hours: recentPrices,
-    };
-  }
-
-  /**
    * Get all cryptocurrency pairs
    *
    * @returns Array of all crypto pairs
@@ -475,14 +302,5 @@ export class DataService {
       where: { isActive: true },
       orderBy: { symbol: 'asc' },
     });
-  }
-
-  /**
-   * Alias for getStatistics() - used by controller
-   *
-   * @returns Statistics object with counts
-   */
-  async getStats() {
-    return await this.getStatistics();
   }
 }

@@ -5,7 +5,7 @@
  */
 
 import { useEffect, useState } from 'react';
-import { getAllCryptoData, getRecentPrices } from '../services/api';
+import { getExchangeRates } from '../services/api';
 import { useWebSocket } from '../hooks/useWebSocket';
 import { PriceCard } from './PriceCard';
 import { PriceChart } from './PriceChart';
@@ -16,46 +16,20 @@ export const Dashboard = () => {
   const [cryptoData, setCryptoData] = useState<AllCryptoData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [historicalPrices, setHistoricalPrices] = useState<
-    Record<string, Array<{ price: number; timestamp: string }>>
-  >({});
 
   const { isConnected, priceUpdates, finnhubStatus } = useWebSocket();
 
-  // Fetch initial data on mount
+  // Fetch initial exchange rates on mount
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const data = await getAllCryptoData(24);
+        const data = await getExchangeRates();
         setCryptoData(data);
-
-        // Load historical prices for charts
-        const symbols = Object.keys(data);
-        const pricesPromises = symbols.map(async (symbol) => {
-          try {
-            const prices = await getRecentPrices(symbol, 50);
-            return { symbol, prices };
-          } catch {
-            console.log(`No historical data for ${symbol}`);
-            return { symbol, prices: [] };
-          }
-        });
-
-        const pricesData = await Promise.all(pricesPromises);
-        const pricesMap: Record<
-          string,
-          Array<{ price: number; timestamp: string }>
-        > = {};
-        pricesData.forEach(({ symbol, prices }) => {
-          pricesMap[symbol] = prices;
-        });
-
-        setHistoricalPrices(pricesMap);
         setError(null);
       } catch (err) {
-        console.error('Failed to fetch crypto data:', err);
-        setError('Failed to load cryptocurrency data');
+        console.error('Failed to fetch exchange rates:', err);
+        setError('Failed to load exchange rates');
       } finally {
         setLoading(false);
       }
@@ -137,7 +111,7 @@ export const Dashboard = () => {
         {/* Charts Section */}
         <div className="mb-8">
           <h2 className="mb-4 text-xl font-semibold text-gray-900">
-            Price Charts
+            Price Charts (Last 5 minutes)
           </h2>
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 xl:grid-cols-3">
             {symbols.map((symbol) => (
@@ -145,7 +119,6 @@ export const Dashboard = () => {
                 key={symbol}
                 symbol={symbol}
                 priceUpdates={priceUpdates}
-                initialPrices={historicalPrices[symbol] || []}
               />
             ))}
           </div>

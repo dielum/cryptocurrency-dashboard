@@ -20,7 +20,6 @@ import type { PriceUpdate } from '../types/crypto';
 interface PriceChartProps {
   symbol: string;
   priceUpdates: PriceUpdate[];
-  initialPrices?: Array<{ price: number; timestamp: string }>;
 }
 
 interface ChartDataPoint {
@@ -31,7 +30,7 @@ interface ChartDataPoint {
 
 const FIVE_MINUTES_MS = 5 * 60 * 1000; // 5 minutes in milliseconds
 
-export const PriceChart = ({ symbol, priceUpdates, initialPrices = [] }: PriceChartProps) => {
+export const PriceChart = ({ symbol, priceUpdates }: PriceChartProps) => {
   const [chartData, setChartData] = useState<ChartDataPoint[]>([]);
   const intervalRef = useRef<number | null>(null);
 
@@ -45,28 +44,6 @@ export const PriceChart = ({ symbol, priceUpdates, initialPrices = [] }: PriceCh
       return pointTime >= fiveMinutesAgo;
     });
   };
-
-  // Initialize with historical data (last 5 minutes)
-  useEffect(() => {
-    if (initialPrices.length > 0) {
-      const now = Date.now();
-      const fiveMinutesAgo = now - FIVE_MINUTES_MS;
-      
-      const historical = initialPrices
-        .filter((price) => {
-          const priceTime = new Date(price.timestamp).getTime();
-          return priceTime >= fiveMinutesAgo;
-        })
-        .map((price) => ({
-          time: new Date(price.timestamp).toLocaleTimeString(),
-          price: price.price,
-          timestamp: price.timestamp,
-        }));
-      
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setChartData(historical);
-    }
-  }, [initialPrices]);
 
   // Add new real-time updates
   useEffect(() => {
@@ -115,9 +92,12 @@ export const PriceChart = ({ symbol, priceUpdates, initialPrices = [] }: PriceCh
   if (chartData.length === 0) {
     return (
       <div className="p-8 text-center bg-white rounded-lg border border-gray-200 shadow-sm">
-        <p className="text-gray-600">Waiting for price data...</p>
+        <h3 className="text-base font-semibold text-gray-900 mb-3">
+          {symbol}
+        </h3>
+        <p className="text-gray-600">Waiting for real-time price data...</p>
         <p className="text-sm text-gray-500 mt-2">
-          Real-time updates will appear here
+          Chart will populate as WebSocket updates arrive
         </p>
       </div>
     );
