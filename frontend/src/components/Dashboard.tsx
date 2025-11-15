@@ -20,6 +20,8 @@ export const Dashboard = () => {
   const { isConnected, priceUpdates, hourlyAverages, finnhubStatus } =
     useWebSocket();
 
+  const currentTime = Date.now();
+
   // Fetch initial exchange rates on mount
   useEffect(() => {
     const fetchData = async () => {
@@ -135,6 +137,7 @@ export const Dashboard = () => {
                 symbol={symbol}
                 priceUpdates={priceUpdates}
                 initialPrices={cryptoData[symbol].recentPrices}
+                currentTime={currentTime}
               />
             ))}
           </div>

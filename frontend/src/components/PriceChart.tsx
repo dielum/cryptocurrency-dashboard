@@ -3,9 +3,10 @@
  *
  * Displays a line chart of recent price updates using recharts
  * Shows only the last 5 minutes of data
+ * This is a presentational component that calculates chart data from props
  */
 
-import { useEffect, useState, useRef } from 'react';
+import { useMemo } from 'react';
 import {
   LineChart,
   Line,
@@ -21,6 +22,7 @@ interface PriceChartProps {
   symbol: string;
   priceUpdates: PriceUpdate[];
   initialPrices?: RecentPrice[]; // Prices from last 5 minutes from initial load
+  currentTime: number;
 }
 
 interface ChartDataPoint {
@@ -35,99 +37,58 @@ export const PriceChart = ({
   symbol,
   priceUpdates,
   initialPrices = [],
+  currentTime,
 }: PriceChartProps) => {
-  const [chartData, setChartData] = useState<ChartDataPoint[]>([]);
-  const intervalRef = useRef<number | null>(null);
-  const initializedRef = useRef(false);
-
-  // Filter data to only show last 5 minutes
-  const filterLast5Minutes = (data: ChartDataPoint[]): ChartDataPoint[] => {
-    const now = Date.now();
+  const chartData = useMemo(() => {
+    const now = currentTime;
     const fiveMinutesAgo = now - FIVE_MINUTES_MS;
 
-    return data.filter((point) => {
-      const pointTime = new Date(point.timestamp).getTime();
-      return pointTime >= fiveMinutesAgo;
-    });
-  };
+    // Combine initial prices and real-time updates
+    const allDataPoints: ChartDataPoint[] = [];
 
-  // Initialize with historical data from API (last 5 minutes)
-  useEffect(() => {
-    if (initialPrices.length > 0 && !initializedRef.current) {
-      const now = Date.now();
-      const fiveMinutesAgo = now - FIVE_MINUTES_MS;
-
-      const historical = initialPrices
-        .filter((price) => {
-          const priceTime = new Date(price.timestamp).getTime();
-          return priceTime >= fiveMinutesAgo;
-        })
-        .map((price) => ({
+    // Add initial prices
+    initialPrices.forEach((price) => {
+      const priceTime = new Date(price.timestamp).getTime();
+      if (priceTime >= fiveMinutesAgo) {
+        allDataPoints.push({
           time: new Date(price.timestamp).toLocaleTimeString(),
           price: price.price,
           timestamp: price.timestamp,
-        }));
-
-      if (historical.length > 0) {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setChartData(historical);
-        initializedRef.current = true;
-      }
-    }
-  }, [initialPrices]);
-
-  // Add new real-time updates
-  useEffect(() => {
-    const newUpdates = priceUpdates
-      .filter((update) => update.symbol === symbol)
-      .map((update) => ({
-        time: new Date(update.timestamp).toLocaleTimeString(),
-        price: update.price,
-        timestamp: update.timestamp,
-      }));
-
-    if (newUpdates.length > 0) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setChartData((prev) => {
-        // Combine previous data with new updates, avoiding duplicates
-        const combined = [...prev];
-        
-        newUpdates.forEach((newUpdate) => {
-          const exists = combined.some(
-            (item) => item.timestamp === newUpdate.timestamp
-          );
-          if (!exists) {
-            combined.push(newUpdate);
-          }
         });
-
-        // Filter to keep only last 5 minutes
-        return filterLast5Minutes(combined);
-      });
-    }
-  }, [priceUpdates, symbol]);
-
-  // Clean up old data every 10 seconds
-  useEffect(() => {
-    intervalRef.current = setInterval(() => {
-      setChartData((prev) => filterLast5Minutes(prev));
-    }, 10000); // Every 10 seconds
-
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
       }
-    };
-  }, []);
+    });
+
+    // Add real-time updates for this symbol
+    priceUpdates
+      .filter((update) => update.symbol === symbol)
+      .forEach((update) => {
+        const updateTime = new Date(update.timestamp).getTime();
+        if (updateTime >= fiveMinutesAgo) {
+          allDataPoints.push({
+            time: new Date(update.timestamp).toLocaleTimeString(),
+            price: update.price,
+            timestamp: update.timestamp,
+          });
+        }
+      });
+
+    // Remove duplicates based on timestamp and sort by timestamp
+    const uniqueDataPoints = Array.from(
+      new Map(allDataPoints.map((point) => [point.timestamp, point])).values(),
+    ).sort(
+      (a, b) =>
+        new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
+    );
+
+    return uniqueDataPoints;
+  }, [symbol, priceUpdates, initialPrices, currentTime]);
 
   if (chartData.length === 0) {
     return (
-      <div className="p-8 text-center bg-white rounded-lg border border-gray-200 shadow-sm">
-        <h3 className="text-base font-semibold text-gray-900 mb-3">
-          {symbol}
-        </h3>
+      <div className="p-8 text-center bg-white border border-gray-200 rounded-lg shadow-sm">
+        <h3 className="mb-3 text-base font-semibold text-gray-900">{symbol}</h3>
         <p className="text-gray-600">Waiting for real-time price data...</p>
-        <p className="text-sm text-gray-500 mt-2">
+        <p className="mt-2 text-sm text-gray-500">
           Chart will populate as WebSocket updates arrive
         </p>
       </div>
@@ -135,14 +96,10 @@ export const PriceChart = ({
   }
 
   return (
-    <div className="p-6 bg-white rounded-lg border border-gray-200 shadow-sm">
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="text-base font-semibold text-gray-900">
-          {symbol}
-        </h3>
-        <span className="text-xs text-gray-500">
-          Last 5 minutes
-        </span>
+    <div className="p-6 bg-white border border-gray-200 rounded-lg shadow-sm">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-base font-semibold text-gray-900">{symbol}</h3>
+        <span className="text-xs text-gray-500">Last 5 minutes</span>
       </div>
 
       <ResponsiveContainer width="100%" height={250}>
@@ -180,7 +137,7 @@ export const PriceChart = ({
         </LineChart>
       </ResponsiveContainer>
 
-      <div className="mt-3 text-xs text-gray-500 text-center">
+      <div className="mt-3 text-xs text-center text-gray-500">
         {chartData.length} data points in last 5 minutes
       </div>
     </div>
