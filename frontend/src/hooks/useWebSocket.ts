@@ -4,7 +4,7 @@
  * Custom React hook for Socket.IO connection and real-time updates
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
 import type {
   PriceUpdate,
@@ -13,6 +13,7 @@ import type {
 } from '../types/crypto';
 
 const WS_URL = import.meta.env.VITE_WS_URL || '/crypto';
+const FIVE_MINUTES_MS = 5 * 60 * 1000; // 5 minutes in milliseconds
 
 interface UseWebSocketReturn {
   socket: Socket | null;
@@ -34,6 +35,7 @@ export const useWebSocket = (): UseWebSocketReturn => {
     null,
   );
   const [error, setError] = useState<string | null>(null);
+  const cleanupIntervalRef = useRef<number | null>(null);
 
   useEffect(() => {
     // Create Socket.IO connection
@@ -72,8 +74,28 @@ export const useWebSocket = (): UseWebSocketReturn => {
     // Price update handler
     socketInstance.on('priceUpdate', (data: PriceUpdate) => {
       setPriceUpdates((prev) => {
-        // Keep only last 100 updates
-        const updated = [data, ...prev].slice(0, 100);
+        const now = Date.now();
+        const fiveMinutesAgo = now - FIVE_MINUTES_MS;
+        const dataTime = new Date(data.timestamp).getTime();
+
+        // Only add new update if it's within the last 5 minutes
+        if (dataTime < fiveMinutesAgo) {
+          // If the new update is too old, just filter the existing ones
+          return prev.filter((update) => {
+            const updateTime = new Date(update.timestamp).getTime();
+            return updateTime >= fiveMinutesAgo;
+          });
+        }
+
+        // Add new update and filter out old ones (older than 5 minutes)
+        const updated = [
+          data,
+          ...prev.filter((update) => {
+            const updateTime = new Date(update.timestamp).getTime();
+            return updateTime >= fiveMinutesAgo;
+          }),
+        ];
+
         return updated;
       });
     });
@@ -104,8 +126,24 @@ export const useWebSocket = (): UseWebSocketReturn => {
       setFinnhubStatus(data);
     });
 
+    // Set up periodic cleanup to remove old price updates
+    cleanupIntervalRef.current = setInterval(() => {
+      setPriceUpdates((prev) => {
+        const now = Date.now();
+        const fiveMinutesAgo = now - FIVE_MINUTES_MS;
+
+        return prev.filter((update) => {
+          const updateTime = new Date(update.timestamp).getTime();
+          return updateTime >= fiveMinutesAgo;
+        });
+      });
+    }, 30000); // Clean up every 30 seconds
+
     // Cleanup on unmount
     return () => {
+      if (cleanupIntervalRef.current) {
+        clearInterval(cleanupIntervalRef.current);
+      }
       socketInstance.disconnect();
     };
   }, []);

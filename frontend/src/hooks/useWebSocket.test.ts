@@ -108,11 +108,14 @@ describe('useWebSocket', () => {
       (call: unknown[]) => Array.isArray(call) && call[0] === 'priceUpdate',
     )?.[1] as (data: PriceUpdate) => void;
 
+    // Use a recent timestamp (within last 5 minutes)
+    const recentTimestamp = new Date(Date.now() - 2 * 60 * 1000).toISOString(); // 2 minutes ago
+
     const mockPriceUpdate: PriceUpdate = {
       symbol: 'ETH/USDC',
       price: 2500.5,
       volume: 100.5,
-      timestamp: '2024-01-01T00:00:00Z',
+      timestamp: recentTimestamp,
     };
 
     if (priceUpdateHandler) {
@@ -206,29 +209,63 @@ describe('useWebSocket', () => {
     });
   });
 
-  it('should limit price updates to 100', async () => {
+  it('should filter out price updates older than 5 minutes', async () => {
     const { result } = renderHook(() => useWebSocket());
 
     const priceUpdateHandler = mockSocket.on.mock.calls.find(
       (call: unknown[]) => Array.isArray(call) && call[0] === 'priceUpdate',
     )?.[1] as (data: PriceUpdate) => void;
 
-    // Send 110 updates
+    // Use timestamps relative to current time
+    const now = Date.now();
+    const recentTimestamp = new Date(now - 2 * 60 * 1000).toISOString(); // 2 minutes ago (should be kept)
+    const oldTimestamp = new Date(now - 6 * 60 * 1000).toISOString(); // 6 minutes ago (should be filtered out)
+
+    // Send recent update
     if (priceUpdateHandler) {
       act(() => {
-        for (let i = 0; i < 110; i++) {
-          priceUpdateHandler({
-            symbol: 'ETH/USDC',
-            price: 2500 + i,
-            timestamp: `2024-01-01T00:00:${i}Z`,
-          });
-        }
+        priceUpdateHandler({
+          symbol: 'ETH/USDC',
+          price: 2500,
+          timestamp: recentTimestamp,
+        });
       });
     }
 
-    await waitFor(() => {
-      expect(result.current.priceUpdates.length).toBeLessThanOrEqual(100);
+    // Wait for recent update to be added
+    let recentUpdateAdded = false;
+    await waitFor(
+      () => {
+        recentUpdateAdded = result.current.priceUpdates.length > 0;
+        expect(recentUpdateAdded).toBe(true);
+      },
+      { timeout: 1000 },
+    );
+
+    const initialLength = result.current.priceUpdates.length;
+
+    // Now send old update (should be filtered out and not added)
+    if (priceUpdateHandler) {
+      act(() => {
+        priceUpdateHandler({
+          symbol: 'ETH/USDC',
+          price: 2499,
+          timestamp: oldTimestamp,
+        });
+      });
+    }
+
+    // Wait a bit for state to update
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 100));
     });
+
+    // Verify old update is not present
+    const oldUpdate = result.current.priceUpdates.find((u) => u.price === 2499);
+    expect(oldUpdate).toBeUndefined();
+
+    // Length should remain the same (old update not added)
+    expect(result.current.priceUpdates.length).toBe(initialLength);
   });
 
   it('should update hourly average for specific symbol', async () => {
