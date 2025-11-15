@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { DataService } from './data.service';
 
@@ -13,7 +13,7 @@ import { DataService } from './data.service';
  * - Can be extended for other scheduled tasks (cleanup, reports, etc.)
  */
 @Injectable()
-export class SchedulerService {
+export class SchedulerService implements OnModuleInit {
   private readonly logger = new Logger(SchedulerService.name);
 
   constructor(private readonly dataService: DataService) {}
