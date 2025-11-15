@@ -13,7 +13,6 @@ interface ConnectionStatusProps {
 
 export const ConnectionStatus = ({
   isWebSocketConnected,
-  finnhubStatus,
 }: ConnectionStatusProps) => {
   return (
     <div className="flex gap-4 text-sm">
@@ -25,19 +24,6 @@ export const ConnectionStatus = ({
         />
         <span className="text-gray-700">
           {isWebSocketConnected ? 'Connected' : 'Disconnected'}
-        </span>
-      </div>
-
-      <div className="w-px bg-gray-300" />
-
-      <div className="flex items-center gap-2">
-        <div
-          className={`w-2 h-2 rounded-full ${
-            finnhubStatus?.connected ? 'bg-green-500' : 'bg-red-500'
-          }`}
-        />
-        <span className="text-gray-700">
-          {finnhubStatus?.message || 'Waiting...'}
         </span>
       </div>
     </div>

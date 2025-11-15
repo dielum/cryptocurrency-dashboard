@@ -13,9 +13,15 @@ interface PriceCardProps {
 }
 
 export const PriceCard = ({ data, latestUpdate }: PriceCardProps) => {
-  const [currentPrice, setCurrentPrice] = useState(data.currentPrice?.price || 0);
-  const [lastUpdate, setLastUpdate] = useState(data.currentPrice?.timestamp || new Date().toISOString());
-  const [priceChange, setPriceChange] = useState<'up' | 'down' | 'neutral'>('neutral');
+  const [currentPrice, setCurrentPrice] = useState(
+    data.currentPrice?.price || 0,
+  );
+  const [lastUpdate, setLastUpdate] = useState(
+    data.currentPrice?.timestamp || new Date().toISOString(),
+  );
+  const [priceChange, setPriceChange] = useState<'up' | 'down' | 'neutral'>(
+    'neutral',
+  );
   const [isFlashing, setIsFlashing] = useState(false);
 
   const { pair } = data;
@@ -84,15 +90,15 @@ export const PriceCard = ({ data, latestUpdate }: PriceCardProps) => {
     >
       <div className="flex items-start justify-between mb-4">
         <div>
-          <h3 className="text-lg font-semibold text-gray-900">
-            {pair.symbol}
-          </h3>
-          <p className="mt-1 text-sm text-gray-600">
-            {pair.name}
-          </p>
+          <h3 className="text-lg font-semibold text-gray-900">{pair.symbol}</h3>
+          <p className="mt-1 text-sm text-gray-600">{pair.name}</p>
         </div>
         {priceChange !== 'neutral' && (
-          <span className={`text-2xl ${priceChange === 'up' ? 'text-green-600' : 'text-red-600'}`}>
+          <span
+            className={`text-2xl ${
+              priceChange === 'up' ? 'text-green-600' : 'text-red-600'
+            }`}
+          >
             {priceChange === 'up' ? '↑' : '↓'}
           </span>
         )}
@@ -137,16 +143,19 @@ export const PriceCard = ({ data, latestUpdate }: PriceCardProps) => {
                 ${formatPrice(data.latestHourlyAverage.low)}
               </span>
             </div>
-         
+
             <div className="flex justify-between pt-1 mt-1 text-gray-500 border-t border-gray-100">
               <span>Hour:</span>
               <span>
-                {new Date(data.latestHourlyAverage.hour).toLocaleString(undefined, {
-                  month: 'short',
-                  day: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit',
-                })}
+                {new Date(data.latestHourlyAverage.hour).toLocaleString(
+                  undefined,
+                  {
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  },
+                )}
               </span>
             </div>
           </div>
