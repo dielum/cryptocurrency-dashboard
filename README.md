@@ -100,3 +100,117 @@ Open your browser and navigate to:
 ```
 http://localhost:5173
 ```
+
+## Testing
+
+The project includes comprehensive unit tests for both backend and frontend.
+
+### Backend Tests
+
+Backend tests use Vitest and cover all major services:
+
+```bash
+cd backend
+npm test              # Run all tests once
+npm run test:watch    # Run tests in watch mode
+npm run test:ui       # Run tests with UI
+npm run test:cov      # Run tests with coverage
+```
+
+**Test Coverage:**
+- `DataService` - Database operations and business logic
+- `FinnhubService` - WebSocket connection and data processing
+- `SchedulerService` - Hourly average calculations
+- `CryptoController` - REST API endpoints
+- `CryptoGateway` - WebSocket gateway for real-time updates
+
+### Frontend Tests
+
+Frontend tests use Vitest and React Testing Library:
+
+```bash
+cd frontend
+npm test              # Run all tests once
+npm run test:watch    # Run tests in watch mode
+npm run test:ui       # Run tests with UI
+npm run test:coverage # Run tests with coverage
+```
+
+**Test Coverage:**
+- React components (`Dashboard`, `PriceCard`, `PriceChart`, `ConnectionStatus`)
+- Custom hooks (`useWebSocket`)
+- API service layer
+
+## Deployment with Kamal
+
+This project is configured for deployment using [Kamal](https://kamal-deploy.org), a zero-downtime deployment tool for containerized applications.
+
+### Prerequisites
+
+- Docker installed locally
+- Docker Hub account (or private registry)
+- SSH access to your server
+- Domain name with DNS configured (optional, for SSL)
+
+### Configuration
+
+The deployment configuration is in `config/deploy.yml`. Key settings:
+
+- **Service name**: `crypto-dashboard`
+- **Docker image**: `dielume/crypto-dashboard` (update with your registry)
+- **Server**: Configure your server IP in `servers.web.hosts`
+- **Proxy**: Uses `kamal-proxy` for SSL and reverse proxy
+- **Database**: SQLite stored in persistent volume at `/var/lib/crypto-dashboard/data`
+
+### Setup Secrets
+
+1. Create `.kamal/secrets` file (this file is gitignored):
+   ```bash
+   mkdir -p .kamal
+   touch .kamal/secrets
+   chmod 600 .kamal/secrets
+   ```
+
+2. Add your secrets to `.kamal/secrets`:
+   ```bash
+   FINNHUB_API_KEY=your_api_key_here
+   FINNHUB_WS_URL=wss://ws.finnhub.io
+   DATABASE_URL=file:./prisma/data/prod.db
+   KAMAL_REGISTRY_PASSWORD=your_docker_hub_password
+   ```
+
+### Deploy Commands
+
+From the project root:
+
+```bash
+# Build and push Docker image
+kamal build push
+
+# Deploy to server
+kamal deploy
+
+# View application logs
+kamal app logs
+
+# Access application console
+kamal app exec -i "cd /app/backend && npm run console"
+
+# Rollback to previous version
+kamal rollback
+
+# Check application health
+kamal app details
+```
+
+### Production Example
+
+A live example of this application is deployed at:
+
+**https://dielum.site/**
+
+This demonstrates the full functionality including:
+- Real-time cryptocurrency price updates
+- Interactive price charts
+- Hourly average calculations
+- WebSocket connection status monitoring
