@@ -17,7 +17,7 @@ export const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const { isConnected, priceUpdates, finnhubStatus } = useWebSocket();
+  const { isConnected, priceUpdates, hourlyAverages, finnhubStatus } = useWebSocket();
 
   // Fetch initial exchange rates on mount
   useEffect(() => {
@@ -104,6 +104,7 @@ export const Dashboard = () => {
               key={symbol}
               data={cryptoData[symbol]}
               latestUpdate={latestUpdate}
+              latestHourlyAverage={hourlyAverages[symbol]}
             />
           ))}
         </div>

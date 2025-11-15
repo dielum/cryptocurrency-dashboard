@@ -18,6 +18,7 @@ interface UseWebSocketReturn {
   socket: Socket | null;
   isConnected: boolean;
   priceUpdates: PriceUpdate[];
+  hourlyAverages: Record<string, HourlyAverage>; // symbol -> latest hourly average
   finnhubStatus: ConnectionStatus | null;
   error: string | null;
 }
@@ -26,6 +27,9 @@ export const useWebSocket = (): UseWebSocketReturn => {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [priceUpdates, setPriceUpdates] = useState<PriceUpdate[]>([]);
+  const [hourlyAverages, setHourlyAverages] = useState<
+    Record<string, HourlyAverage>
+  >({});
   const [finnhubStatus, setFinnhubStatus] = useState<ConnectionStatus | null>(
     null,
   );
@@ -75,10 +79,24 @@ export const useWebSocket = (): UseWebSocketReturn => {
     });
 
     // Hourly average handler
-    socketInstance.on('hourlyAverage', (data: HourlyAverage) => {
-      console.log('Received hourly average:', data);
-      // Can be handled separately if needed
-    });
+    socketInstance.on(
+      'hourlyAverage',
+      (data: HourlyAverage & { symbol: string; timestamp: string }) => {
+        console.log('Received hourly average update for:', data.symbol);
+        setHourlyAverages((prev) => ({
+          ...prev,
+          [data.symbol]: {
+            id: data.id,
+            pairId: data.pairId,
+            hour: data.hour,
+            average: data.average,
+            high: data.high,
+            low: data.low,
+            count: data.count,
+          },
+        }));
+      },
+    );
 
     // Connection status handler (Finnhub connection)
     socketInstance.on('connectionStatus', (data: ConnectionStatus) => {
@@ -96,6 +114,7 @@ export const useWebSocket = (): UseWebSocketReturn => {
     socket,
     isConnected,
     priceUpdates,
+    hourlyAverages,
     finnhubStatus,
     error,
   };

@@ -1,6 +1,13 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  OnModuleInit,
+  Inject,
+  forwardRef,
+} from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { DataService } from './data.service';
+import { CryptoGateway } from './crypto.gateway';
 
 /**
  * SchedulerService
@@ -16,26 +23,29 @@ import { DataService } from './data.service';
 export class SchedulerService implements OnModuleInit {
   private readonly logger = new Logger(SchedulerService.name);
 
-  constructor(private readonly dataService: DataService) {}
+  constructor(
+    private readonly dataService: DataService,
+    @Inject(forwardRef(() => CryptoGateway))
+    private readonly cryptoGateway: CryptoGateway,
+  ) {}
 
   /**
    * Calculate hourly averages for all crypto pairs
-   * Runs at the start of every hour (HH:00:00)
+   * TEST MODE: Runs every 30 seconds for testing
+   * TODO: Change back to CronExpression.EVERY_HOUR for production
    *
-   * @cron 0 * * * * - At minute 0 of every hour
    */
-  @Cron(CronExpression.EVERY_HOUR, {
+  @Cron('*/30 * * * * *', {
     name: 'calculateHourlyAverages',
     timeZone: 'UTC',
   })
   async handleHourlyAverageCalculation() {
-    this.logger.log('⏰ Starting hourly average calculation...');
+    this.logger.log(
+      '⏰ Starting hourly average calculation (TEST: every 30s)...',
+    );
 
     try {
-      // Get all active pairs
       const pairs = await this.dataService.getActivePairs();
-
-      // Calculate average for each pair
       const calculations = pairs.map(async (pair) => {
         try {
           const result = await this.dataService.calculateHourlyAverage(
@@ -46,6 +56,18 @@ export class SchedulerService implements OnModuleInit {
             this.logger.log(
               `✓ Calculated hourly average for ${pair.symbol}: ${result.average.toFixed(2)}`,
             );
+
+            // Broadcast the hourly average update to all connected clients
+            this.cryptoGateway.broadcastHourlyAverage({
+              symbol: pair.symbol,
+              id: result.id,
+              pairId: result.pairId,
+              average: result.average,
+              high: result.high,
+              low: result.low,
+              count: result.count,
+              hour: result.hour,
+            });
           } else {
             this.logger.warn(
               `⚠️  No data available for ${pair.symbol} hourly average`,
@@ -83,7 +105,9 @@ export class SchedulerService implements OnModuleInit {
    */
   onModuleInit() {
     this.logger.log('🚀 Scheduler service initialized');
-    this.logger.log('⏰ Next hourly calculation at: top of next hour (UTC)');
+    this.logger.log(
+      '⏰ TEST MODE: Hourly average calculation will run every 30 seconds',
+    );
 
     // Calculate averages for the previous hour on startup
     // This is helpful if the app restarts mid-hour

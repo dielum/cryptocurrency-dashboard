@@ -111,4 +111,31 @@ export class CryptoGateway
 
     this.logger.log(`Broadcasted connection status: ${status.message}`);
   }
+
+  /**
+   * Broadcast hourly average update to all connected clients
+   * Called by SchedulerService when hourly averages are calculated
+   *
+   * @param averageData The hourly average data to broadcast
+   */
+  broadcastHourlyAverage(averageData: {
+    symbol: string;
+    id: string;
+    pairId: string;
+    average: number;
+    high: number;
+    low: number;
+    count: number;
+    hour: Date;
+  }) {
+    this.server.emit('hourlyAverage', {
+      ...averageData,
+      hour: averageData.hour.toISOString(),
+      timestamp: new Date().toISOString(),
+    });
+
+    this.logger.log(
+      `Broadcasted hourly average for ${averageData.symbol}: ${averageData.average.toFixed(2)}`,
+    );
+  }
 }

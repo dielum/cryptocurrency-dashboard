@@ -5,14 +5,15 @@
  */
 
 import { useEffect, useState } from 'react';
-import type { CryptoData, PriceUpdate } from '../types/crypto';
+import type { CryptoData, PriceUpdate, HourlyAverage } from '../types/crypto';
 
 interface PriceCardProps {
   data: CryptoData;
   latestUpdate?: PriceUpdate;
+  latestHourlyAverage?: HourlyAverage;
 }
 
-export const PriceCard = ({ data, latestUpdate }: PriceCardProps) => {
+export const PriceCard = ({ data, latestUpdate, latestHourlyAverage }: PriceCardProps) => {
   const [currentPrice, setCurrentPrice] = useState(
     data.currentPrice?.price || 0,
   );
@@ -119,7 +120,7 @@ export const PriceCard = ({ data, latestUpdate }: PriceCardProps) => {
         </div>
       </div>
 
-      {data.latestHourlyAverage && (
+      {(latestHourlyAverage || data.latestHourlyAverage) && (
         <div className="pt-4 mt-4 border-t border-gray-200">
           <h4 className="mb-2 text-xs font-semibold tracking-wider text-gray-700 uppercase">
             Last Hour Average
@@ -128,26 +129,26 @@ export const PriceCard = ({ data, latestUpdate }: PriceCardProps) => {
             <div className="flex justify-between">
               <span className="text-gray-600">Average:</span>
               <span className="font-semibold text-indigo-600">
-                ${formatPrice(data.latestHourlyAverage.average)}
+                ${formatPrice((latestHourlyAverage || data.latestHourlyAverage)!.average)}
               </span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">High:</span>
               <span className="font-medium text-green-600">
-                ${formatPrice(data.latestHourlyAverage.high)}
+                ${formatPrice((latestHourlyAverage || data.latestHourlyAverage)!.high)}
               </span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">Low:</span>
               <span className="font-medium text-red-600">
-                ${formatPrice(data.latestHourlyAverage.low)}
+                ${formatPrice((latestHourlyAverage || data.latestHourlyAverage)!.low)}
               </span>
             </div>
 
             <div className="flex justify-between pt-1 mt-1 text-gray-500 border-t border-gray-100">
               <span>Hour:</span>
               <span>
-                {new Date(data.latestHourlyAverage.hour).toLocaleString(
+                {new Date((latestHourlyAverage || data.latestHourlyAverage)!.hour).toLocaleString(
                   undefined,
                   {
                     month: 'short',
